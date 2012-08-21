@@ -1,3 +1,6 @@
+--olga and michael say hello to George and DSH
+
+
 module Main where
 
 import Data.List
