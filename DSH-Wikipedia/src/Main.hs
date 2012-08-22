@@ -72,29 +72,33 @@ writeHeader = writeFile "header.csv" (concat content ++ "\n")
                             , "soc_closeness_in_centrality"
                             , "eco_closeness_out_centrality"
                             , "soc_closeness_out_centrality"
+                            , "sum_clicks_on_pages_pointing_to"
                             ]
 
 
 runDay :: Double -> IO ()
 runDay day = do
-  rEcoPageIds              <- fmap Set.fromList (runQ relevantEcoPageIds)
-  rSocPageIds              <- fmap Set.fromList (runQ relevantSocPageIds)
-  rNoRevisions             <- fmap Map.fromList (runQ (forRelevantPages (toQ day) noRevision))
-  rNoLinks                 <- fmap Map.fromList (runQ (forRelevantPages (toQ day) noLink))
-  rCentralities            <- fmap Map.fromList (runQ (forRelevantPages (toQ day) (centrality relevantLinks)))
-  rEcoCentralities         <- fmap Map.fromList (runQ (forRelevantPages (toQ day) (centrality relevantEcoLinks)))
-  rSocCentralities         <- fmap Map.fromList (runQ (forRelevantPages (toQ day) (centrality relevantSocLinks)))
-  rOutwardLinkNumbers      <- fmap Map.fromList (runQ (forRelevantPages (toQ day) outwardLinkNumber))
-  rClickNumbers            <- fmap Map.fromList (runQ (forRelevantPages (toQ day) clickNumber))
-  rRevisionNumbers         <- fmap Map.fromList (runQ (forRelevantPages (toQ day) revisionNumber))
-  rAuthorNumbers           <- fmap Map.fromList (runQ (forRelevantPages (toQ day) authorNumber))
-  rPageLengths             <- fmap Map.fromList (runQ (forRelevantPages (toQ day) pageLength))
-  rLatestRevisionStats     <- fmap Map.fromList (runQ (forRelevantPages (toQ day) latestRevisionStat))
-  rGlobalNodeNumber        <- fmap Map.fromList (runQ (forRelevantPages (toQ day) globalNodeNumber))
-  rGlobalClosenessIn       <- fmap Map.fromList (runQ (forRelevantPages (toQ day) globalClosenessIn))
-  rGlobalEigenvector       <- fmap Map.fromList (runQ (forRelevantPages (toQ day) globalEigenvector))
-  rEcoNetwork              <- runQ (ecoNetwork (toQ day))
-  rSocNetwork              <- runQ (socNetwork (toQ day))
+
+  rEcoPageIds                 <- fmap Set.fromList (runQ relevantEcoPageIds)
+  rSocPageIds                 <- fmap Set.fromList (runQ relevantSocPageIds)
+  rNoRevisions                <- fmap Map.fromList (runQ (forRelevantPages (toQ day) noRevision))
+  rNoLinks                    <- fmap Map.fromList (runQ (forRelevantPages (toQ day) noLink))
+  rCentralities               <- fmap Map.fromList (runQ (forRelevantPages (toQ day) (centrality relevantLinks)))
+  rEcoCentralities            <- fmap Map.fromList (runQ (forRelevantPages (toQ day) (centrality relevantEcoLinks)))
+  rSocCentralities            <- fmap Map.fromList (runQ (forRelevantPages (toQ day) (centrality relevantSocLinks)))
+  rOutwardLinkNumbers         <- fmap Map.fromList (runQ (forRelevantPages (toQ day) outwardLinkNumber))
+  rClickNumbers               <- fmap Map.fromList (runQ (forRelevantPages (toQ day) clickNumber))
+  rRevisionNumbers            <- fmap Map.fromList (runQ (forRelevantPages (toQ day) revisionNumber))
+  rAuthorNumbers              <- fmap Map.fromList (runQ (forRelevantPages (toQ day) authorNumber))
+  rPageLengths                <- fmap Map.fromList (runQ (forRelevantPages (toQ day) pageLength))
+  rLatestRevisionStats        <- fmap Map.fromList (runQ (forRelevantPages (toQ day) latestRevisionStat))
+  rGlobalNodeNumber           <- fmap Map.fromList (runQ (forRelevantPages (toQ day) globalNodeNumber))
+  rGlobalClosenessIn          <- fmap Map.fromList (runQ (forRelevantPages (toQ day) globalClosenessIn))
+  rGlobalEigenvector          <- fmap Map.fromList (runQ (forRelevantPages (toQ day) globalEigenvector))
+  rSumClicksOnPagesPointingTo <- fmap Map.fromList (runQ (forRelevantPages (toQ day) sumClicksOnPagesPointingTo))
+  rEcoNetwork                 <- runQ (ecoNetwork (toQ day))
+  rSocNetwork                 <- runQ (socNetwork (toQ day))
+
 
   let rEcoGraph       = Graph.make (resolveRedirects rEcoNetwork rLatestRevisionStats)
   let rSocGraph       = Graph.make (resolveRedirects rSocNetwork rLatestRevisionStats)
@@ -108,7 +112,7 @@ runDay day = do
 
   let result =  [ let revStat = (rLatestRevisionStats ! pid)
                   in  if (rNoRevisions ! pid && rNoLinks ! pid)
-                        then (day,pid,na,na,na,na,na,na,na,na,na,na,na,na,na,na,na,nad,nad,na,na,nad,nad,nad,nad,nad,nad)
+                        then (day,pid,na,na,na,na,na,na,na,na,na,na,na,na,na,na,na,nad,nad,na,na,nad,nad,nad,nad,nad,nad,na)
                         else ( day
                              , pid
                              , rCentralities       ! pid
@@ -136,6 +140,7 @@ runDay day = do
                              , if (Graph.member rSocGraph pid) then Graph.closenessIn  rSocGraph pid else nad
                              , if (Graph.member rEcoGraph pid) then Graph.closenessOut rEcoGraph pid else nad
                              , if (Graph.member rSocGraph pid) then Graph.closenessOut rSocGraph pid else nad
+                             , rSumClicksOnPagesPointingTo ! pid
                              )
                 | pid <- Map.keys rLatestRevisionStats
                 ]
@@ -181,4 +186,4 @@ main = do
   -- writeInvHeader
   -- runInv
   writeHeader
-  mapM_ runDay days -- (take 1 days)
+  mapM_ runDay days

@@ -200,6 +200,16 @@ outwardLinkNumber day pageId = length
   , link_removedQ link > day
   ]
 
+sumClicksOnPagesPointingTo :: Q Double -> Q Integer -> Q Integer
+sumClicksOnPagesPointingTo day pageId =
+    sum
+  $ map (clickNumber day)
+  $ nub
+  $ map link_from_pageQ
+  $ filter (\l -> link_to_pageQ l == pageId)
+  $ filter (\l -> link_addedQ l < day && link_removedQ l > day)
+  $ links
+
 forRelevantPages :: (QA a) => Q Double -> (Q Double -> Q Integer -> Q a) -> Q [(Integer,a)]
 forRelevantPages day f =
     map (\scp -> tuple (scp_pageQ scp, f day (scp_pageQ scp)))
