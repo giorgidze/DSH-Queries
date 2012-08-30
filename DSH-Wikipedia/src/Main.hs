@@ -8,6 +8,7 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 
 import Control.Exception
+import System.Environment
 
 import qualified Data.IGraph as Graph
 
@@ -178,11 +179,21 @@ runDay day = do
 
 -- Mondays from Mon, 10 Dec 2007 04:00:00 GMT
 --         to   Mon, 08 Nov 2010 04:00:00 GMT
-days :: [Double]
-days = take 153 (iterate (+ 7 * 24 * 60 * 60) 1197259200)
+
+usageInstructions :: String
+usageInstructions =
+  "Usage instructions:\n \
+  $ dsh-wikipedia start interval number\n \
+  For example:\n \
+  $ dsh-wikipedia 1197259200 604800 153"
 
 main :: IO ()
 main = do
+  args <- getArgs
+  let days = case args of
+               [sStart,sInterval,sNumber] ->
+                 take (read sNumber) (iterate (+ (read sInterval)) (read sStart))
+               _ -> error usageInstructions
   -- writeInvHeader
   -- runInv
   writeHeader
