@@ -181,19 +181,19 @@ runDay day = do
 --         to   Mon, 08 Nov 2010 04:00:00 GMT
 
 usageInstructions :: String
-usageInstructions =
-  "Usage instructions:\n \
-  $ dsh-wikipedia start interval number\n \
-  For example:\n \
-  $ dsh-wikipedia 1197259200 604800 153"
+usageInstructions = unlines
+  [ "Usage instructions:"
+  , "  $ dsh-wikipedia start interval number"
+  , "For example:"
+  , "  $ dsh-wikipedia 1197259200 604800 153"]
 
 main :: IO ()
 main = do
   args <- getArgs
-  let days = case args of
-               [sStart,sInterval,sNumber] ->
-                 take (read sNumber) (iterate (+ (read sInterval)) (read sStart))
-               _ -> error usageInstructions
+  days <- case args of
+            [sStart,sInterval,sNumber] ->
+              return $ take (read sNumber) (iterate (+ (read sInterval)) (read sStart))
+            _ -> error usageInstructions
   -- writeInvHeader
   -- runInv
   writeHeader
