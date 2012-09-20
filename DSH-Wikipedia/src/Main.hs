@@ -93,9 +93,9 @@ runDay day = do
   rAuthorNumbers              <- fmap Map.fromList (runQ (forRelevantPages (toQ day) authorNumber))
   rPageLengths                <- fmap Map.fromList (runQ (forRelevantPages (toQ day) pageLength))
   rLatestRevisionStats        <- fmap Map.fromList (runQ (forRelevantPages (toQ day) latestRevisionStat))
-  rGlobalNodeNumber           <- fmap Map.fromList (runQ (forRelevantPages (toQ day) globalNodeNumber))
-  rGlobalClosenessIn          <- fmap Map.fromList (runQ (forRelevantPages (toQ day) globalClosenessIn))
-  rGlobalEigenvector          <- fmap Map.fromList (runQ (forRelevantPages (toQ day) globalEigenvector))
+  -- rGlobalNodeNumber           <- fmap Map.fromList (runQ (forRelevantPages (toQ day) globalNodeNumber))
+  -- rGlobalClosenessIn          <- fmap Map.fromList (runQ (forRelevantPages (toQ day) globalClosenessIn))
+  -- rGlobalEigenvector          <- fmap Map.fromList (runQ (forRelevantPages (toQ day) globalEigenvector))
   rSumClicksOnPagesPointingTo <- fmap Map.fromList (runQ (forRelevantPages (toQ day) sumClicksOnPagesPointingTo))
   rEcoNetwork                 <- runQ (ecoNetwork (toQ day))
   rSocNetwork                 <- runQ (socNetwork (toQ day))
@@ -113,7 +113,7 @@ runDay day = do
 
   let result =  [ let revStat = (rLatestRevisionStats ! pid)
                   in  if (rNoRevisions ! pid && rNoLinks ! pid)
-                        then (day,pid,na,na,na,na,na,na,na,na,na,na,na,na,na,na,na,nad,nad,na,na,nad,nad,nad,nad,nad,nad,na)
+                        then (day,pid,na,na,na,na,na,na,na,na,na,na,na,na,na,na, {- na,nad,nad, -} na,na,nad,nad,nad,nad,nad,nad,na)
                         else ( day
                              , pid
                              , rCentralities       ! pid
@@ -130,9 +130,9 @@ runDay day = do
                              , maybe 0 (rev_stat_literature_number) revStat
                              , maybe 0 (rev_stat_reference_number ) revStat
                              , maybe 0 (rev_stat_external_links   ) revStat
-                             , rGlobalNodeNumber   ! pid
-                             , rGlobalClosenessIn  ! pid
-                             , rGlobalEigenvector  ! pid
+                             -- , rGlobalNodeNumber   ! pid
+                             -- , rGlobalClosenessIn  ! pid
+                             -- , rGlobalEigenvector  ! pid
                              , ecoNodeNumber
                              , socNodeNumber
                              , if (Graph.member rEcoGraph pid) then rEcoBetweenness ! pid else nad
@@ -194,7 +194,5 @@ main = do
             [sStart,sInterval,sNumber] ->
               return $ take (read sNumber) (iterate (+ (read sInterval)) (read sStart))
             _ -> error usageInstructions
-  -- writeInvHeader
-  -- runInv
   writeHeader
   mapM_ runDay days

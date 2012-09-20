@@ -22,12 +22,6 @@ $(generateTableRecordInstances getConnectionDef "super_category_pages" "SuperCat
 $(generateTableRecordInstances getConnectionDef "langlinks"            "LangLink"            [''Show,''Eq,''Ord])
 $(generateTableRecordInstances getConnectionDef "user_groups"          "UserGroup"           [''Show,''Eq,''Ord])
 $(generateTableRecordInstances getConnectionDef "network_stats"        "NetworkStat"         [''Show,''Eq,''Ord])
--- $(generateTableRecordInstances getConnectionDef "renames2"             "Rename"              [''Show,''Eq,''Ord])
-
-
-
--- days :: Q [Double]
--- days = tableWithKeys "days" [["day"]]
 
 revisions :: Q [Revision]
 revisions = tableWithKeys "revisions" [["rev_id"]]
@@ -58,6 +52,3 @@ user_groups = tableWithKeys "user_groups" [["ug_user"]]
 
 network_stats :: Q [NetworkStat]
 network_stats = tableWithKeys "network_stats" [["network_stat_date","network_stat_page"]]
-
--- renames :: Q [Integer]
--- renames = table "renames2"

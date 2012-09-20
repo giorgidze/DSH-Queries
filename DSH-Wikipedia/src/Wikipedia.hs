@@ -155,9 +155,6 @@ pageLangLinks pageId = length
   , ll_pageQ ll == pageId
   ]
 
--- pageRenamed :: Q Integer -> Q Bool
--- pageRenamed pageId = pageId `elem` (renames)
-
 latestRevisionStat :: Q Double -> Q Integer -> Q (Maybe RevisionStat)
 latestRevisionStat day pageId =
     listToMaybe
