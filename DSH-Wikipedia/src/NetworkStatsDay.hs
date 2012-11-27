@@ -7,6 +7,7 @@ import System.Environment (getArgs)
 import Data.String
 import qualified Data.HashMap.Strict as M
 import qualified Data.HashSet as S
+import Control.Monad
 
 getConnection :: IO Connection
 getConnection = connect (defaultConnectInfo{connectUser = "giorgidz", connectDatabase = "giorgidz"})
@@ -60,10 +61,29 @@ insertResults :: [(Double,Integer,Integer,Double,Double)] -> IO ()
 insertResults = mapM_ go
   where
   fields = "(network_stat_date,network_stat_page,network_stat_nodes,network_stat_closeness_in,network_stat_eigenvector)"
-  go r = do
+  go r@( network_stat_date
+       , network_stat_page
+       , network_stat_nodes
+       , network_stat_closeness_in
+       , network_stat_eigenvector
+       ) = do
     conn <- getConnection
-    _ <- execute conn (fromString ("INSERT INTO network_stats " ++ fields ++" VALUES (?,?,?,?,?)")) r
-    close conn
+    res1 <- query conn
+                  (fromString (unlines [ "SELECT network_stat_nodes        , "
+                                       , "       network_stat_closeness_in , "
+                                       , "       network_stat_eigenvector    "
+                                       , "FROM   network_stats"
+                                       , "WHERE  network_stat_date = ? AND network_stat_page = ?"
+                                       ]))
+                  (network_stat_date,network_stat_page)
+
+    case res1 of
+      []                  -> do _ <- execute conn (fromString ("INSERT INTO network_stats " ++ fields ++" VALUES (?,?,?,?,?)")) r
+                                close conn
+      (nsd,nsci,nsei) : _ -> do when (nsd  == (-999 :: Int))    $ fmap (const ()) $ execute conn (fromString ("UPDATE network_stats SET network_stat_nodes = ?        WHERE network_stat_date = ? AND network_stat_page = ?")) (network_stat_nodes,network_stat_date,network_stat_page)
+                                when (nsci == (-999 :: Double)) $ fmap (const ()) $ execute conn (fromString ("UPDATE network_stats SET network_stat_closeness_in = ? WHERE network_stat_date = ? AND network_stat_page = ?")) (network_stat_closeness_in,network_stat_date,network_stat_page)
+                                when (nsei == (-999 :: Double)) $ fmap (const ()) $ execute conn (fromString ("UPDATE network_stats SET network_stat_eigenvector = ?  WHERE network_stat_date = ? AND network_stat_page = ?")) (network_stat_eigenvector,network_stat_date,network_stat_page)
+                                close conn
 
 main :: IO ()
 main = do
@@ -71,7 +91,7 @@ main = do
   let day = case args of
               []      -> error "usage: dsh-wikipedia-centralities-day epoch_time_stamp"
               (s : _) -> read s
-  
+
   rEdges     <- getEdges day
   rPageIds   <- getPageIds
   rRedirects <- getRedirects day
